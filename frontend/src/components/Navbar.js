@@ -1,0 +1,73 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiMenu, FiX, FiBell } from 'react-icons/fi';
+import '../styles/Navbar.css';
+
+const Navbar = ({ user, onLogout }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    onLogout();
+    navigate('/');
+    setMobileMenuOpen(false);
+  };
+
+  const getDashboardLink = () => {
+    if (!user) return '/';
+    switch (user.role) {
+      case 'customer':
+        return '/customer/dashboard';
+      case 'checker':
+        return '/checker/dashboard';
+      case 'admin':
+        return '/admin/dashboard';
+      default:
+        return '/';
+    }
+  };
+
+  return (
+    <nav className="navbar">
+      <div className="navbar-container">
+        <Link to="/" className="navbar-brand">
+          🔍 Plagiarism Checker
+        </Link>
+
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+        </button>
+
+        <ul className={`navbar-menu ${mobileMenuOpen ? 'active' : ''}`}>
+          {!user ? (
+            <>
+              <li><Link to="/">Home</Link></li>
+              <li><Link to="/pricing">Pricing</Link></li>
+              <li><Link to="/contact">Contact</Link></li>
+              <li><Link to="/login" className="btn btn-primary">Login</Link></li>
+            </>
+          ) : (
+            <>
+              <li><Link to={getDashboardLink()}>Dashboard</Link></li>
+              <li className="notification-icon">
+                <Link to="/notifications" style={{ color: 'inherit', display: 'flex', alignItems: 'center' }}>
+                  <FiBell size={20} />
+                </Link>
+              </li>
+              <li className="user-menu">
+                <span className="user-name">{user.name}</span>
+                <span className="user-role badge">{user.role}</span>
+              </li>
+              <li><button onClick={handleLogout} className="btn btn-danger">Logout</button></li>
+            </>
+          )}
+        </ul>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;

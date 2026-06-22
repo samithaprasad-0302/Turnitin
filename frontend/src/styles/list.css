@@ -1,0 +1,660 @@
+/* Lists and Tables */
+.files-container,
+.users-container,
+.jobs-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.files-container h1,
+.users-container h1,
+.jobs-container h1 {
+  margin-bottom: 30px;
+  color: #333;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #eee;
+}
+
+.tab {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+/* Tables */
+.files-table,
+.users-table {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  max-height: 480px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+}
+
+.files-table table,
+.users-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.files-table th,
+.users-table th {
+  background-color: #f8f9fa;
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: inset 0 -2px 0 #ddd;
+}
+
+.files-table td,
+.users-table td {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.files-table tr:hover,
+.users-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Filter Bar */
+.filter-bar {
+  margin-bottom: 20px;
+}
+
+.filter-bar select {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+}
+
+/* Status Select */
+.status-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Jobs Grid */
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.job-card {
+  background-color: white;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  border-left: 4px solid #e0e0e0;
+}
+
+.job-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Card header: title + file-type badge side-by-side */
+.job-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.job-card-header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #222;
+  word-break: break-word;
+  flex: 1;
+}
+
+/* File type badge — PDF / DOCX */
+.file-type-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.type-pdf {
+  background: #fde8e8;
+  color: #c0392b;
+  border: 1px solid #f5b7b1;
+}
+
+.type-docx {
+  background: #daeeff;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+/* Meta row with icon + text items */
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 12px;
+}
+
+.meta-item {
+  font-size: 12.5px;
+  color: #555;
+}
+
+/* Status badge row */
+.job-status-row {
+  margin-bottom: 14px;
+}
+
+.badge-status-pending    { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+.badge-status-accepted   { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
+.badge-status-completed  { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.badge-status-cancelled  { background: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; }
+
+/* Actions row */
+.job-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.job-actions .btn {
+  flex: 1;
+  text-align: center;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
+/* Full-width accept button */
+.btn-block {
+  width: 100%;
+  display: block;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Hint shown on available-jobs tab */
+.accept-hint {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: #888;
+  font-style: italic;
+  border-top: 1px dashed #eee;
+  padding-top: 8px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #888;
+  font-size: 15px;
+}
+
+/* File type hint in upload label */
+.file-type-hint {
+  font-weight: 400;
+  color: #888;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+@media (max-width: 768px) {
+  .files-table table,
+  .users-table table {
+    font-size: 12px;
+  }
+
+  .files-table th,
+  .files-table td,
+  .users-table th,
+  .users-table td {
+    padding: 10px;
+  }
+
+  .jobs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Report Upload Panel (Checker) ── */
+.report-upload-panel {
+  margin-top: 18px;
+  padding: 18px;
+  background: #f0f7ff;
+  border: 1px solid #b3d4f5;
+  border-radius: 10px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.report-upload-panel h4 {
+  margin: 0 0 14px;
+  color: #1a5fa8;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.report-upload-panel .form-group {
+  margin-bottom: 12px;
+}
+
+.report-upload-panel .form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 5px;
+}
+
+.report-upload-panel .form-group input,
+.report-upload-panel .form-group textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.report-upload-panel .message {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.report-upload-panel .message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.report-upload-panel .message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* ── Report Download Buttons (Customer Files) ── */
+.report-download-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pending-label {
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+}
+
+/* ── Results cell — AI % and Plagiarism % ── */
+.results-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ai-result {
+  background: #e8f0fe;
+  color: #1a56db;
+  border: 1px solid #b3caf5;
+}
+
+.plag-result {
+  background: #e6f9ed;
+  color: #1a7a42;
+  border: 1px solid #a6dab8;
+}
+
+/* ── File Action Buttons ── */
+.file-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s ease;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #b02a37;
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancelled-label {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .report-upload-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .file-action-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+/* Jobs Sections inside Accepted Tab */
+.jobs-section {
+  margin-top: 30px;
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #eaeded;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dispute-title {
+  color: #c0392b;
+  border-bottom-color: #fadbd8;
+}
+
+/* ── Wrong File Alert: section wrapper ── */
+.dispute-section-wrapper {
+  background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 100%);
+  border: 2px solid #e74c3c;
+  border-radius: 14px;
+  padding: 28px 28px 24px;
+  margin-top: 48px;
+  box-shadow: 0 4px 24px rgba(231, 76, 60, 0.15);
+  animation: disputePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes disputePulse {
+  0%, 100% { box-shadow: 0 4px 24px rgba(231, 76, 60, 0.15); }
+  50%       { box-shadow: 0 4px 32px rgba(231, 76, 60, 0.38); }
+}
+
+/* ── Section header inside the wrapper ── */
+.dispute-section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 2px dashed #f5b7b1;
+}
+
+.dispute-header-icon {
+  font-size: 40px;
+  line-height: 1;
+  flex-shrink: 0;
+  animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) infinite;
+  animation-delay: 1s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-4px) rotate(-5deg); }
+  40%       { transform: translateX(4px) rotate(5deg); }
+  60%       { transform: translateX(-3px); }
+  80%       { transform: translateX(3px); }
+}
+
+.dispute-header-text h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #c0392b;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dispute-header-text p {
+  font-size: 14px;
+  color: #922b21;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.dispute-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+/* ── Individual disputed job card ── */
+.job-card-disputed {
+  border: 2px solid #e74c3c !important;
+  border-left: 6px solid #c0392b !important;
+  background: #fff8f8 !important;
+  box-shadow: 0 2px 12px rgba(231, 76, 60, 0.18) !important;
+}
+
+/* ── Inline dispute alert banner inside the card ── */
+.dispute-alert-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: linear-gradient(90deg, #c0392b 0%, #e74c3c 100%);
+  color: #fff;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.dispute-alert-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dispute-alert-body strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  letter-spacing: 0.2px;
+}
+
+.dispute-alert-body p {
+  font-size: 13px;
+  margin: 0;
+  opacity: 0.92;
+  line-height: 1.5;
+}
+
+.dispute-alert-body em {
+  font-style: normal;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.no-jobs-hint {
+  font-size: 14px;
+  color: #7f8c8d;
+  font-style: italic;
+  padding: 20px;
+  background: #fcfcfc;
+  border-radius: 8px;
+  border: 1px dashed #e2e8f0;
+}
+
+/* ── Checker Capacity Banner ── */
+.capacity-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  border: 1px solid transparent;
+  flex-wrap: wrap;
+}
+
+.capacity-free {
+  background: #eafaf1;
+  border-color: #a9dfbf;
+  color: #1e8449;
+}
+
+.capacity-partial {
+  background: #fef9e7;
+  border-color: #f8c471;
+  color: #784212;
+}
+
+.capacity-full {
+  background: #fdf2f2;
+  border-color: #f5b7b1;
+  color: #c0392b;
+}
+
+.capacity-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.capacity-text {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.capacity-view-btn {
+  margin-left: auto;
+  padding: 5px 14px;
+  border: 1px solid currentColor;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.capacity-view-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Slot-full (greyed-out) accept button */
+.btn-secondary {
+  background-color: #adb5bd;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+/* ── Completed job cards ── */
+.job-card-completed {
+  border-left: 4px solid #27ae60;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+  opacity: 0.92;
+}
+
+.completed-files-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e8f5e9;
+}
+
+.completed-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}

@@ -1,0 +1,40 @@
+/* Forms */
+.upload-container,
+.contact-page {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.upload-form,
+.contact-form {
+  background-color: white;
+  padding: 40px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.upload-form h1,
+.contact-form h1 {
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.message {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: var(--border-radius);
+  border-left: 4px solid;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border-color: #28a745;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #dc3545;
+}

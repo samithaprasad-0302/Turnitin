@@ -1,0 +1,36 @@
+.auth-container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.auth-form {
+  background-color: white;
+  padding: 40px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.auth-form h2 {
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.auth-form form {
+  margin-bottom: 20px;
+}
+
+.auth-link {
+  text-align: center;
+  color: #666;
+}
+
+.auth-link a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-link a:hover {
+  text-decoration: underline;
+}

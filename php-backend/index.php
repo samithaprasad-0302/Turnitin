@@ -63,8 +63,11 @@ if ($basePath !== '/' && str_starts_with($path, $basePath)) {
     $path = substr($path, strlen($basePath));
 }
 
-// Normalize path
+// Normalize path and ensure it always starts with /api
 $path = '/' . trim($path, '/');
+if (!str_starts_with($path, '/api')) {
+    $path = '/api' . $path;
+}
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 if ($path === '/api/health' && $method === 'GET') {

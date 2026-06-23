@@ -747,14 +747,14 @@ const CustomerDashboard = ({ user }) => {
                       </div>
                     )}
 
-                    {uploadFile && uploadFile.size < 7 * 1024 * 1024 && (
+                    {uploadFile && uploadFile.size > 7 * 1024 * 1024 && (
                       <div className="file-size-warning-box" style={{ marginTop: '14px' }}>
                         <span>⚠️</span>
                         <div>
-                          <strong>Below 7 MB Recommendation</strong>
+                          <strong>Above 7 MB Recommendation</strong>
                           <p style={{ margin: '2px 0 0', fontSize: '11.5px' }}>
-                            Your selected file size is only <strong>{(uploadFile.size / (1024 * 1024)).toFixed(2)} MB</strong>. 
-                            Please ensure this is the intended document before uploading.
+                            Your selected file size is <strong>{(uploadFile.size / (1024 * 1024)).toFixed(2)} MB</strong>. 
+                            Please ensure this is correct before uploading, as files under 7 MB are recommended for faster checking.
                           </p>
                         </div>
                       </div>
@@ -795,8 +795,8 @@ const CustomerDashboard = ({ user }) => {
                   <li>
                     <span className="guideline-icon">💾</span>
                     <div className="guideline-text">
-                      <strong>Minimum File Size</strong>
-                      <span>Your file size must be at least 7 MB.</span>
+                      <strong>Maximum File Size</strong>
+                      <span>Recommended file size is under 7 MB.</span>
                     </div>
                   </li>
                   <li>

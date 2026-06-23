@@ -30,7 +30,7 @@ const Navbar = ({ user, onLogout }) => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/" className="navbar-brand">
+        <Link to="/" className="navbar-brand" onClick={() => setMobileMenuOpen(false)}>
           <FiShield className="brand-icon" />
           <span>Turnscan</span>
         </Link>
@@ -45,16 +45,16 @@ const Navbar = ({ user, onLogout }) => {
         <ul className={`navbar-menu ${mobileMenuOpen ? 'active' : ''}`}>
           {!user ? (
             <>
-              <li><Link to="/">Home</Link></li>
-              <li><Link to="/pricing">Pricing</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              <li><Link to="/login" className="btn btn-primary">Login</Link></li>
+              <li><Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link></li>
+              <li><Link to="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link></li>
+              <li><Link to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact</Link></li>
+              <li><Link to="/login" className="btn btn-primary" onClick={() => setMobileMenuOpen(false)}>Login</Link></li>
             </>
           ) : (
             <>
-              <li><Link to={getDashboardLink()}>Dashboard</Link></li>
+              <li><Link to={getDashboardLink()} onClick={() => setMobileMenuOpen(false)}>Dashboard</Link></li>
               <li className="notification-icon">
-                <Link to="/notifications" style={{ color: 'inherit', display: 'flex', alignItems: 'center' }}>
+                <Link to="/notifications" style={{ color: 'inherit', display: 'flex', alignItems: 'center' }} onClick={() => setMobileMenuOpen(false)}>
                   <FiBell size={20} />
                 </Link>
               </li>

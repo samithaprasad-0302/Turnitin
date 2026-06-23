@@ -183,7 +183,7 @@ class AdminController {
         $stmt = $pdo->query("
             SELECT
                 COUNT(*) as total,
-                COALESCE(SUM(CASE WHEN status = 'pending'     THEN 1 ELSE 0 END), 0) as pending,
+                COALESCE(SUM(CASE WHEN status IN ('pending', 'accepted', 'in_progress') THEN 1 ELSE 0 END), 0) as pending,
                 COALESCE(SUM(CASE WHEN status = 'accepted'    THEN 1 ELSE 0 END), 0) as accepted,
                 COALESCE(SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END), 0) as in_progress,
                 COALESCE(SUM(CASE WHEN status = 'completed'   THEN 1 ELSE 0 END), 0) as completed

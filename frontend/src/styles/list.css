@@ -45,7 +45,7 @@
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   max-height: 480px;
-  overflow-y: auto;
+  overflow: auto;
   border: 1px solid #e2e8f0;
 }
 
@@ -406,6 +406,50 @@
   .file-action-buttons {
     flex-direction: row;
     flex-wrap: wrap;
+  }
+
+  /* Job actions buttons stack on mobile */
+  .job-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .job-actions .btn {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  /* Capacity banner responsive wrapper */
+  .capacity-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 14px 16px !important;
+  }
+
+  .capacity-view-btn {
+    margin-left: 0 !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  /* Dispute alert sections mobile layout */
+  .dispute-section-wrapper {
+    padding: 16px !important;
+    margin-top: 24px !important;
+  }
+
+  .dispute-section-header {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .dispute-header-text h2 {
+    justify-content: center !important;
   }
 }
 

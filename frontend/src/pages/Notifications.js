@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/axios';
 import '../styles/list.css';
+import '../styles/notifications.css';
+
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);

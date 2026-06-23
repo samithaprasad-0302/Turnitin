@@ -41,6 +41,7 @@ function App() {
   const [adminPassword, setAdminPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     checkMaintenance();
@@ -51,6 +52,11 @@ function App() {
     } else {
       setLoading(false);
     }
+
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   const checkMaintenance = async () => {
@@ -75,6 +81,100 @@ function App() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+    const isDev = process.env.NODE_ENV === 'development';
+
+    if (isDev) {
+      // Short-polling mode for local development (keeps PHP thread unlocked)
+      let lastFilesState = null;
+      let lastNotificationCount = null;
+      let lastCommentsCount = null;
+      let isFirstCheck = true;
+
+      const checkRealtime = async () => {
+        try {
+          const response = await axios.get('/api/realtime?poll=true', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const { filesState, notificationCount, commentsCount } = response.data;
+
+          let hasChanges = false;
+          if (lastFilesState !== filesState) {
+            if (!isFirstCheck) hasChanges = true;
+            lastFilesState = filesState;
+          }
+          if (lastNotificationCount !== notificationCount) {
+            if (!isFirstCheck) hasChanges = true;
+            lastNotificationCount = notificationCount;
+          }
+          if (lastCommentsCount !== commentsCount) {
+            if (!isFirstCheck) hasChanges = true;
+            lastCommentsCount = commentsCount;
+          }
+
+          if (isFirstCheck) {
+            isFirstCheck = false;
+          } else if (hasChanges) {
+            window.dispatchEvent(new CustomEvent('realtime-update', { detail: { type: 'update' } }));
+          }
+        } catch (err) {
+          console.error('Real-time poll failed:', err);
+        }
+      };
+
+      // Poll every 3 seconds in dev
+      checkRealtime();
+      const interval = setInterval(checkRealtime, 3000);
+      return () => clearInterval(interval);
+    } else {
+      // SSE (EventSource) mode for production (multi-threaded servers)
+      const sseUrl = `${apiUrl}/realtime?token=${token}`;
+      let eventSource = null;
+      let reconnectTimeout = null;
+
+      const connectRealtime = () => {
+        if (eventSource) {
+          eventSource.close();
+        }
+
+        eventSource = new EventSource(sseUrl);
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'update') {
+              window.dispatchEvent(new CustomEvent('realtime-update', { detail: data }));
+            }
+          } catch (err) {
+            console.error('SSE JSON parse error:', err);
+          }
+        };
+
+        eventSource.onerror = (err) => {
+          eventSource.close();
+          reconnectTimeout = setTimeout(connectRealtime, 5000);
+        };
+      };
+
+      connectRealtime();
+
+      return () => {
+        if (eventSource) {
+          eventSource.close();
+        }
+        if (reconnectTimeout) {
+          clearTimeout(reconnectTimeout);
+        }
+      };
+    }
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -110,8 +210,32 @@ function App() {
     }
   };
 
-  if (checkingMaintenance || loading) {
-    return <div className="loading">Loading...</div>;
+  if (checkingMaintenance || loading || showSplash) {
+    return (
+      <div className="splash-container">
+        <div className="splash-content">
+          <div className="splash-logo-wrapper">
+            <div className="splash-logo-glow"></div>
+            <svg
+              className="splash-logo"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.0"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <h1 className="splash-title">Turnscan</h1>
+          <span className="splash-subtitle">by zytech 360</span>
+          <div className="splash-loader-bar">
+            <div className="splash-loader-progress"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (maintenance && (!user || user.role !== 'admin')) {
@@ -263,7 +387,7 @@ function App() {
               <div className="maintenance-icon">⚙️</div>
               <h1>Under Maintenance</h1>
               <p>
-                Our plagiarism checker is temporarily undergoing scheduled maintenance to improve services. We apologize for the inconvenience and will be back shortly.
+                Our Turnscan portal is temporarily undergoing scheduled maintenance to improve services. We apologize for the inconvenience and will be back shortly.
               </p>
               <button className="admin-login-link" onClick={() => setShowAdminLogin(true)}>
                 Sign In as Administrator

@@ -40,11 +40,23 @@ const CheckerJobs = () => {
   }, [location.search]);
 
   useEffect(() => {
-    fetchFiles();
+    fetchFiles(false);
+
+    const handleRealtime = () => {
+      fetchFiles(true);
+    };
+
+    window.addEventListener('realtime-update', handleRealtime);
+    const interval = setInterval(handleRealtime, 60000);
+
+    return () => {
+      window.removeEventListener('realtime-update', handleRealtime);
+      clearInterval(interval);
+    };
   }, [tab]);
 
-  const fetchFiles = async () => {
-    setLoading(true);
+  const fetchFiles = async (isPoll = false) => {
+    if (!isPoll) setLoading(true);
     try {
       const endpoint =
         tab === 'pending'   ? '/api/files/pending'   :
@@ -61,7 +73,7 @@ const CheckerJobs = () => {
     } catch (error) {
       console.error('Failed to fetch files:', error);
     } finally {
-      setLoading(false);
+      if (!isPoll) setLoading(false);
     }
   };
 

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import '../../styles/dashboard.css';
+import '../../styles/list.css';
+import '../../styles/notifications.css';
+
 
 const CheckerDashboard = ({ user }) => {
   const location = useLocation();
@@ -42,22 +45,52 @@ const CheckerDashboard = ({ user }) => {
 
   // Load checker workload stats & earnings totals
   useEffect(() => {
-    fetchStats();
+    fetchStats(false);
     fetchUnreadCount();
+
+    const handleRealtime = () => {
+      fetchStats(true);
+      fetchUnreadCount();
+    };
+
+    window.addEventListener('realtime-update', handleRealtime);
+    const interval = setInterval(handleRealtime, 60000);
+
+    return () => {
+      window.removeEventListener('realtime-update', handleRealtime);
+      clearInterval(interval);
+    };
   }, []);
 
   // Fetch view data dynamically when active tab switches
   useEffect(() => {
     if (activeMenu === 'available' || activeMenu === 'accepted' || activeMenu === 'completed' || activeMenu === 'earnings') {
-      fetchFiles(activeMenu === 'earnings' ? 'completed' : activeMenu);
+      fetchFiles(activeMenu === 'earnings' ? 'completed' : activeMenu, false);
     } else if (activeMenu === 'notifications') {
-      fetchNotifications();
+      fetchNotifications(false);
       fetchUnreadCount();
     }
+
+    const handleRealtime = () => {
+      if (activeMenu === 'available' || activeMenu === 'accepted' || activeMenu === 'completed' || activeMenu === 'earnings') {
+        fetchFiles(activeMenu === 'earnings' ? 'completed' : activeMenu, true);
+      } else if (activeMenu === 'notifications') {
+        fetchNotifications(true);
+        fetchUnreadCount();
+      }
+    };
+
+    window.addEventListener('realtime-update', handleRealtime);
+    const interval = setInterval(handleRealtime, 60000);
+
+    return () => {
+      window.removeEventListener('realtime-update', handleRealtime);
+      clearInterval(interval);
+    };
   }, [activeMenu]);
 
-  const fetchStats = async () => {
-    setLoadingStats(true);
+  const fetchStats = async (isPoll = false) => {
+    if (!isPoll) setLoadingStats(true);
     try {
       const response = await axios.get('/api/admin/checker-stats', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -66,12 +99,12 @@ const CheckerDashboard = ({ user }) => {
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     } finally {
-      setLoadingStats(false);
+      if (!isPoll) setLoadingStats(false);
     }
   };
 
-  const fetchFiles = async (tabType) => {
-    setLoadingFiles(true);
+  const fetchFiles = async (tabType, isPoll = false) => {
+    if (!isPoll) setLoadingFiles(true);
     try {
       const endpoint =
         tabType === 'available' ? '/api/files/pending' :
@@ -84,12 +117,12 @@ const CheckerDashboard = ({ user }) => {
     } catch (error) {
       console.error('Failed to fetch files:', error);
     } finally {
-      setLoadingFiles(false);
+      if (!isPoll) setLoadingFiles(false);
     }
   };
 
-  const fetchNotifications = async () => {
-    setLoadingNotifications(true);
+  const fetchNotifications = async (isPoll = false) => {
+    if (!isPoll) setLoadingNotifications(true);
     try {
       const response = await axios.get('/api/notifications?limit=50', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -98,7 +131,7 @@ const CheckerDashboard = ({ user }) => {
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {
-      setLoadingNotifications(false);
+      if (!isPoll) setLoadingNotifications(false);
     }
   };
 
@@ -608,8 +641,9 @@ const CheckerDashboard = ({ user }) => {
 
         {activeMenu === 'notifications' && (
           <>
-            <div className="portal-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="portal-content-header portal-content-header-flex">
               <h1>Notifications</h1>
+
               {unreadCount > 0 && (
                 <button onClick={handleMarkAllAsRead} className="btn btn-sm btn-primary">
                   Mark All as Read
@@ -654,19 +688,19 @@ const CheckerDashboard = ({ user }) => {
               <h1>Earnings & Payouts</h1>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '15px' }}>
-              <div style={{ padding: '25px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '13px', color: '#64748b', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' }}>Unpaid Completed Jobs</span>
-                <p style={{ fontSize: '32px', fontWeight: '800', margin: '15px 0 0', color: '#0f172a' }}>{stats?.unpaid_completed_jobs || 0}</p>
+            <div className="earnings-grid">
+              <div className="earnings-card unpaid">
+                <span className="earnings-card-title unpaid-title">Unpaid Completed Jobs</span>
+                <p className="earnings-card-value unpaid-value">{stats?.unpaid_completed_jobs || 0}</p>
               </div>
-              <div style={{ padding: '25px', borderRadius: '12px', border: '1px solid #bbf7d0', background: '#f0fdf4', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '13px', color: '#166534', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' }}>Due Balance (Unpaid)</span>
-                <p style={{ fontSize: '32px', fontWeight: '800', margin: '15px 0 0', color: '#15803d' }}>${parseFloat(stats?.due_amount || 0).toFixed(2)}</p>
+              <div className="earnings-card due">
+                <span className="earnings-card-title due-title">Due Balance (Unpaid)</span>
+                <p className="earnings-card-value due-value">${parseFloat(stats?.due_amount || 0).toFixed(2)}</p>
               </div>
             </div>
-            <div style={{ marginTop: '30px', padding: '20px', borderRadius: '8px', background: '#f8fafc', borderLeft: '4px solid #94a3b8' }}>
-              <h3 style={{ fontSize: '14px', margin: '0 0 8px', color: '#334155' }}>Payout Rules & Information</h3>
-              <p style={{ fontSize: '13px', color: '#64748b', margin: 0, lineHeight: '1.6' }}>
+            <div className="earnings-rules-box">
+              <h3 className="earnings-rules-title">Payout Rules & Information</h3>
+              <p className="earnings-rules-text">
                 Checkers are assigned to check uploaded documents and receive a flat fee of <strong>$0.60 per file</strong> completed successfully.
                 Payouts are processed daily by the administrator and are credited directly. Once a payout is completed, your unpaid counts will be reset.
               </p>

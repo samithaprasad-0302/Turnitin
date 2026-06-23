@@ -27,6 +27,7 @@ require_once __DIR__ . '/controllers/FileController.php';
 require_once __DIR__ . '/controllers/ReportController.php';
 require_once __DIR__ . '/controllers/AdminController.php';
 require_once __DIR__ . '/controllers/NotificationController.php';
+require_once __DIR__ . '/controllers/RealtimeController.php';
 
 // ─── CORS Headers ────────────────────────────────────────────────────────────
 $appUrl = $_ENV['APP_URL'] ?? 'http://localhost:3000';
@@ -165,6 +166,12 @@ if ($path === '/api/auth/me' && $method === 'GET') {
 if ($path === '/api/auth/profile' && $method === 'PUT') {
     $user = authenticate();
     AuthController::updateProfile($user);
+}
+
+// GET /api/realtime
+if ($path === '/api/realtime' && $method === 'GET') {
+    $user = authenticate();
+    RealtimeController::stream($user);
 }
 
 // ── File Routes ──────────────────────────────────────────────────────────────

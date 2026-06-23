@@ -4,8 +4,11 @@ import '../styles/pages.css';
 const Contact = () => {
   return (
     <div className="contact-page">
-      <h1>Contact Us</h1>
-      <p>We'd love to hear from you. Send us a message!</p>
+      <div className="section-header">
+        <span className="section-tag">Get in Touch</span>
+        <h2>Contact Us</h2>
+        <p>We'd love to hear from you. Send us a message and we'll reply shortly.</p>
+      </div>
 
       <form className="contact-form">
         <div className="form-group">

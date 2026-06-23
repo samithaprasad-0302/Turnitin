@@ -19,7 +19,17 @@ const AdminDashboard = ({ user }) => {
   useEffect(() => {
     fetchStats();
     fetchMaintenanceStatus();
-  }, []);
+
+    const handleRealtime = () => {
+      fetchStats();
+      if (activeMenu === 'system') {
+        fetchStorageStats();
+      }
+    };
+
+    window.addEventListener('realtime-update', handleRealtime);
+    return () => window.removeEventListener('realtime-update', handleRealtime);
+  }, [activeMenu]);
 
   const fetchMaintenanceStatus = async () => {
     try {

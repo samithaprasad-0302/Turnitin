@@ -1,9 +1,89 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import '../../styles/dashboard.css';
 import '../../styles/forms.css';
 import '../../styles/list.css';
+
+// Web Audio API Synthesizers for Notifications
+const playProcessSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    
+    // Rising chime note sequence (A4 then C#5)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(440, now);
+    gain1.gain.setValueAtTime(0.12, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.35);
+    
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(554.37, now + 0.12);
+    gain2.gain.setValueAtTime(0.12, now + 0.12);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.47);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.12);
+    osc2.stop(now + 0.47);
+  } catch (err) {
+    console.error('Audio synthesizer error:', err);
+  }
+};
+
+const playCompleteSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    
+    // Rising success chime (C5 -> E5 -> G5)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(523.25, now);
+    gain1.gain.setValueAtTime(0.10, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.25);
+    
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(659.25, now + 0.08);
+    gain2.gain.setValueAtTime(0.10, now + 0.08);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.33);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.08);
+    osc2.stop(now + 0.33);
+
+    const osc3 = ctx.createOscillator();
+    const gain3 = ctx.createGain();
+    osc3.type = 'sine';
+    osc3.frequency.setValueAtTime(783.99, now + 0.16);
+    gain3.gain.setValueAtTime(0.12, now + 0.16);
+    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    osc3.connect(gain3);
+    gain3.connect(ctx.destination);
+    osc3.start(now + 0.16);
+    osc3.stop(now + 0.55);
+  } catch (err) {
+    console.error('Audio synthesizer error:', err);
+  }
+};
 
 const CustomerDashboard = ({ user }) => {
   const location = useLocation();
@@ -24,7 +104,8 @@ const CustomerDashboard = ({ user }) => {
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
-
+  const [isDragging, setIsDragging] = useState(false);
+  const prevFilesRef = useRef([]);
   // Notifications data
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -46,22 +127,52 @@ const CustomerDashboard = ({ user }) => {
 
   // Load customer statistics
   useEffect(() => {
-    fetchStats();
+    fetchStats(false);
     fetchUnreadCount();
+    trackFileStatus(false);
+
+    const handleRealtime = () => {
+      fetchStats(true);
+      fetchUnreadCount();
+      trackFileStatus(true);
+    };
+
+    window.addEventListener('realtime-update', handleRealtime);
+    const interval = setInterval(handleRealtime, 60000);
+
+    return () => {
+      window.removeEventListener('realtime-update', handleRealtime);
+      clearInterval(interval);
+    };
   }, []);
 
   // Fetch view data dynamically when active tab switches
   useEffect(() => {
     if (activeMenu === 'pending' || activeMenu === 'completed' || activeMenu === 'payments') {
-      fetchFiles();
+      fetchFiles(false);
     } else if (activeMenu === 'notifications') {
-      fetchNotifications();
+      fetchNotifications(false);
       fetchUnreadCount();
     }
+
+    const handleRealtime = () => {
+      if (activeMenu === 'notifications') {
+        fetchNotifications(true);
+        fetchUnreadCount();
+      }
+    };
+
+    window.addEventListener('realtime-update', handleRealtime);
+    const interval = setInterval(handleRealtime, 60000);
+
+    return () => {
+      window.removeEventListener('realtime-update', handleRealtime);
+      clearInterval(interval);
+    };
   }, [activeMenu]);
 
-  const fetchStats = async () => {
-    setLoadingStats(true);
+  const fetchStats = async (isPoll = false) => {
+    if (!isPoll) setLoadingStats(true);
     try {
       const response = await axios.get('/api/admin/customer-stats', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -70,12 +181,12 @@ const CustomerDashboard = ({ user }) => {
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     } finally {
-      setLoadingStats(false);
+      if (!isPoll) setLoadingStats(false);
     }
   };
 
-  const fetchFiles = async () => {
-    setLoadingFiles(true);
+  const fetchFiles = async (isPoll = false) => {
+    if (!isPoll) setLoadingFiles(true);
     try {
       const response = await axios.get('/api/files/my-files', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -84,12 +195,39 @@ const CustomerDashboard = ({ user }) => {
     } catch (error) {
       console.error('Failed to fetch files:', error);
     } finally {
-      setLoadingFiles(false);
+      if (!isPoll) setLoadingFiles(false);
     }
   };
 
-  const fetchNotifications = async () => {
-    setLoadingNotifications(true);
+  const trackFileStatus = async (isPoll = false) => {
+    try {
+      const response = await axios.get('/api/files/my-files', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      const newFiles = response.data.files || [];
+      
+      if (isPoll && prevFilesRef.current && prevFilesRef.current.length > 0) {
+        newFiles.forEach(newFile => {
+          const prevFile = prevFilesRef.current.find(f => f.id === newFile.id);
+          if (prevFile) {
+            if (prevFile.status === 'pending' && (newFile.status === 'accepted' || newFile.status === 'in_progress')) {
+              playProcessSound();
+            } else if ((prevFile.status === 'accepted' || prevFile.status === 'in_progress') && newFile.status === 'completed') {
+              playCompleteSound();
+            }
+          }
+        });
+      }
+      
+      setFiles(newFiles);
+      prevFilesRef.current = newFiles;
+    } catch (error) {
+      console.error('Failed to track file status:', error);
+    }
+  };
+
+  const fetchNotifications = async (isPoll = false) => {
+    if (!isPoll) setLoadingNotifications(true);
     try {
       const response = await axios.get('/api/notifications?limit=50', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -98,7 +236,7 @@ const CustomerDashboard = ({ user }) => {
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {
-      setLoadingNotifications(false);
+      if (!isPoll) setLoadingNotifications(false);
     }
   };
 
@@ -137,6 +275,41 @@ const CustomerDashboard = ({ user }) => {
     }
   };
 
+  // Drag & drop handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    if (!limitReached && !uploading) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (limitReached || uploading) return;
+
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      validateAndSetFile(file);
+    }
+  };
+
+  const validateAndSetFile = (selected) => {
+    if (!selected) return;
+    const ext = selected.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'docx'].includes(ext)) {
+      setUploadMessage('Only PDF (.pdf) and Word (.docx) files are accepted.');
+      setUploadFile(null);
+      return;
+    }
+    setUploadMessage('');
+    setUploadFile(selected);
+  };
+
   // Upload handlers
   const handleUploadChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -144,16 +317,7 @@ const CustomerDashboard = ({ user }) => {
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
-    if (!selected) return;
-    const ext = selected.name.split('.').pop().toLowerCase();
-    if (!['pdf', 'docx'].includes(ext)) {
-      setUploadMessage('Only PDF (.pdf) and Word (.docx) files are accepted.');
-      e.target.value = '';
-      setUploadFile(null);
-      return;
-    }
-    setUploadMessage('');
-    setUploadFile(selected);
+    validateAndSetFile(selected);
   };
 
   const handleUploadSubmit = async (e) => {
@@ -257,8 +421,8 @@ const CustomerDashboard = ({ user }) => {
   const getStatusBadge = (status) => {
     const badges = {
       pending:     'badge-warning',
-      accepted:    'badge-info',
-      in_progress: 'badge-primary',
+      accepted:    'badge-processing',
+      in_progress: 'badge-processing',
       completed:   'badge-success',
       cancelled:   'badge-secondary'
     };
@@ -395,9 +559,14 @@ const CustomerDashboard = ({ user }) => {
 
       {/* Sidebar navigation plane */}
       <div className="portal-sidebar">
-        <div className="portal-sidebar-header">
-          <h2>Welcome, {user?.name}!</h2>
-          <p>Customer Portal</p>
+        <div className="portal-profile-card">
+          <div className="profile-avatar">
+            {user?.name ? user.name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'PT'}
+          </div>
+          <div className="profile-info">
+            <h3>{user?.name || 'Customer'}</h3>
+            <p>Customer Portal</p>
+          </div>
         </div>
 
         <ul className="portal-menu">
@@ -453,39 +622,45 @@ const CustomerDashboard = ({ user }) => {
 
         {/* Workload Stats cards at the top of the main content area */}
         {activeMenu !== 'completed' && activeMenu !== 'payments' && activeMenu !== 'notifications' && (
-          <div className="stats-grid compact" style={{ marginBottom: '20px' }}>
+          <div className="stats-grid compact">
             <div
               className="stat-card"
               onClick={() => setActiveMenu('pending')}
-              style={{ cursor: 'pointer' }}
               title="View Pending Files"
             >
-              <h3>Total Uploads</h3>
-              <p className="stat-value">{stats?.total_uploads || 0} / {fileLimit}</p>
+              <div className="stat-card-info">
+                <h3>Total Uploads</h3>
+                <p className="stat-value">{stats?.total_uploads || 0} / {fileLimit}</p>
+              </div>
+              <div className="stat-card-icon">📊</div>
             </div>
             <div
               className="stat-card"
               onClick={() => setActiveMenu('pending')}
-              style={{ cursor: 'pointer' }}
               title="View Pending Files"
             >
-              <h3>Pending Files</h3>
-              <p className="stat-value">{stats?.pending || 0}</p>
+              <div className="stat-card-info">
+                <h3>Pending Files</h3>
+                <p className="stat-value">{stats?.pending || 0}</p>
+              </div>
+              <div className="stat-card-icon">⏳</div>
             </div>
             <div
               className="stat-card"
               onClick={() => setActiveMenu('completed')}
-              style={{ cursor: 'pointer' }}
               title="View Completed Files"
             >
-              <h3>Completed Files</h3>
-              <p className="stat-value">{stats?.completed || 0}</p>
+              <div className="stat-card-info">
+                <h3>Completed Files</h3>
+                <p className="stat-value">{stats?.completed || 0}</p>
+              </div>
+              <div className="stat-card-icon">✓</div>
             </div>
           </div>
         )}
 
         {activeMenu === 'upload' && (
-          <div className="upload-container" style={{ padding: '0', maxWidth: '600px' }}>
+          <div className="upload-container" style={{ padding: '0', maxWidth: '1000px' }}>
             <div className="portal-content-header">
               <h1>Upload Document</h1>
             </div>
@@ -502,36 +677,138 @@ const CustomerDashboard = ({ user }) => {
               </div>
             )}
 
-            <form onSubmit={handleUploadSubmit} className="upload-form">
-              <div className="form-group">
-                <label>Service Type</label>
-                <select 
-                  name="service_type" 
-                  value={formData.service_type} 
-                  onChange={handleUploadChange}
-                  disabled={limitReached || uploading}
-                >
-                  <option value="ai_detection">AI Detection Only</option>
-                  <option value="plagiarism_check">Plagiarism Check Only</option>
-                  <option value="both">Both (AI + Plagiarism)</option>
-                </select>
+            <div className="upload-grid">
+              {/* Form Block */}
+              <div style={{ width: '100%' }}>
+                <form onSubmit={handleUploadSubmit} className="upload-form">
+                  <div className="form-group">
+                    <label>Service Type</label>
+                    <select 
+                      name="service_type" 
+                      value={formData.service_type} 
+                      onChange={handleUploadChange}
+                      disabled={limitReached || uploading}
+                    >
+                      <option value="ai_detection">AI Detection Only</option>
+                      <option value="plagiarism_check">Plagiarism Check Only</option>
+                      <option value="both">Both (AI + Plagiarism)</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Upload Document File</label>
+                    <div 
+                      className={`drag-drop-zone ${isDragging ? 'dragging' : ''}`}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      onClick={() => {
+                        if (!limitReached && !uploading) {
+                          document.getElementById('file-upload-input').click();
+                        }
+                      }}
+                    >
+                      <span className="upload-cloud-icon">☁️</span>
+                      <div className="drag-drop-text">
+                        <h4>Click to select or drag & drop file</h4>
+                        <p>Supported file extensions: PDF or DOCX only</p>
+                      </div>
+                      <span className="file-type-badge-hint">PDF, DOCX</span>
+                      
+                      <input
+                        id="file-upload-input"
+                        type="file"
+                        className="hidden-file-input"
+                        onChange={handleFileChange}
+                        accept=".pdf,.docx"
+                        disabled={limitReached || uploading}
+                      />
+                    </div>
+
+                    {uploadFile && (
+                      <div className="selected-file-card">
+                        <span className="file-icon-check">📄</span>
+                        <div className="selected-file-details">
+                          <span className="selected-file-name">{uploadFile.name}</span>
+                          <span className="selected-file-size">{(uploadFile.size / (1024 * 1024)).toFixed(2)} MB</span>
+                        </div>
+                        <button 
+                          type="button" 
+                          className="clear-file-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadFile(null);
+                            const fileInput = document.getElementById('file-upload-input');
+                            if (fileInput) fileInput.value = '';
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+
+                    {uploadFile && uploadFile.size < 7 * 1024 * 1024 && (
+                      <div className="file-size-warning-box" style={{ marginTop: '14px' }}>
+                        <span>⚠️</span>
+                        <div>
+                          <strong>Below 7 MB Recommendation</strong>
+                          <p style={{ margin: '2px 0 0', fontSize: '11.5px' }}>
+                            Your selected file size is only <strong>{(uploadFile.size / (1024 * 1024)).toFixed(2)} MB</strong>. 
+                            Please ensure this is the intended document before uploading.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    disabled={uploading || limitReached || !uploadFile}
+                    style={{ marginTop: '14px', width: '100%' }}
+                  >
+                    {uploading ? 'Uploading...' : 'Upload Document'}
+                  </button>
+                </form>
               </div>
 
-              <div className="form-group">
-                <label>Select File <span className="file-type-hint">(PDF or DOCX only)</span></label>
-                <input
-                  type="file"
-                  onChange={handleFileChange}
-                  required
-                  accept=".pdf,.docx"
-                  disabled={limitReached || uploading}
-                />
+              {/* Guidelines Block */}
+              <div className="upload-guidelines-card">
+                <h3>📋 Document Requirements</h3>
+                <p className="guidelines-subtitle">Please ensure your document meets these conditions before uploading to avoid checking errors:</p>
+                
+                <ul className="guidelines-list">
+                  <li>
+                    <span className="guideline-icon">❌</span>
+                    <div className="guideline-text">
+                      <strong>No Cover Sheets or Logos</strong>
+                      <span>Do not upload files containing cover pages, headers with symbols, or university/institution logos.</span>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="guideline-icon">🔢</span>
+                    <div className="guideline-text">
+                      <strong>Word Count Range</strong>
+                      <span>The document word count must be between 400 and 29,000 words.</span>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="guideline-icon">💾</span>
+                    <div className="guideline-text">
+                      <strong>Minimum File Size</strong>
+                      <span>Your file size must be at least 7 MB.</span>
+                    </div>
+                  </li>
+                  <li>
+                    <span className="guideline-icon">🖼️</span>
+                    <div className="guideline-text">
+                      <strong>Remove Images</strong>
+                      <span>You can strip images from the file to save upload time, as Turnitin does not scan/detect them.</span>
+                    </div>
+                  </li>
+                </ul>
               </div>
-
-              <button type="submit" className="btn btn-primary" disabled={uploading || limitReached}>
-                {uploading ? 'Uploading...' : 'Upload Document'}
-              </button>
-            </form>
+            </div>
           </div>
         )}
 
@@ -568,7 +845,7 @@ const CustomerDashboard = ({ user }) => {
                         <td>
                           <div className="status-cell">
                             <span className={`badge ${getStatusBadge(file.status)}`}>
-                              {file.status}
+                              {file.status === 'accepted' || file.status === 'in_progress' ? 'Processing' : file.status}
                             </span>
                           </div>
                         </td>
@@ -622,7 +899,7 @@ const CustomerDashboard = ({ user }) => {
                       <th>Service Type</th>
                       <th>Status</th>
                       <th>Upload Date</th>
-                      <th>Actions</th>
+                      <th style={{ minWidth: '450px' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -634,7 +911,7 @@ const CustomerDashboard = ({ user }) => {
                         <td>
                           <div className="status-cell">
                             <span className={`badge ${getStatusBadge(file.status)}`}>
-                              {file.status}
+                              {file.status === 'accepted' || file.status === 'in_progress' ? 'Processing' : file.status}
                             </span>
                             {/* Dispute status indicator */}
                             {file.dispute_status === 'reported' && (
@@ -654,43 +931,46 @@ const CustomerDashboard = ({ user }) => {
                         {/* Actions */}
                         <td>
                           <div className="file-action-buttons">
-                            <>
-                              {(file.service_type === 'ai_detection' || file.service_type === 'both') && (
-                                <button
-                                  onClick={() => handleDownloadReport(file.id, 'ai')}
-                                  className="btn btn-sm btn-primary"
-                                  title="Download AI Detection Report"
-                                >
-                                  🤖 AI Report
-                                </button>
-                              )}
-                              {(file.service_type === 'plagiarism_check' || file.service_type === 'both') && (
-                                <button
-                                  onClick={() => handleDownloadReport(file.id, 'plagiarism')}
-                                  className="btn btn-sm btn-success"
-                                  title="Download Plagiarism Report"
-                                >
-                                  📋 Plagiarism Report
-                                </button>
-                              )}
+                            {(file.service_type === 'ai_detection' || file.service_type === 'both') && (
+                              <button
+                                onClick={() => handleDownloadReport(file.id, 'ai')}
+                                className="ai-report-btn"
+                                title="Download AI Detection Report"
+                              >
+                                🤖 AI Report
+                              </button>
+                            )}
+                            {(file.service_type === 'plagiarism_check' || file.service_type === 'both') && (
+                              <button
+                                onClick={() => handleDownloadReport(file.id, 'plagiarism')}
+                                className="plag-report-btn"
+                                title="Download Plagiarism Report"
+                              >
+                                📋 Plagiarism Report
+                              </button>
+                            )}
 
-                              {file.dispute_status !== 'reported' && (
-                                <button
-                                  onClick={() => handleDispute(file.id)}
-                                  className="btn btn-sm btn-dispute"
-                                  disabled={disputingId === file.id}
-                                  title="Report a problem with the received report files"
-                                >
-                                  {disputingId === file.id ? 'Sending...' : '⚠️ Report a Problem'}
-                                </button>
-                              )}
+                            {file.dispute_status !== 'reported' && (
+                              <button
+                                onClick={() => handleDispute(file.id)}
+                                className="action-btn-secondary"
+                                disabled={disputingId === file.id}
+                                title={disputingId === file.id ? 'Sending...' : 'Report a problem with files'}
+                              >
+                                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                {disputingId === file.id ? 'Sending...' : 'Report a Problem'}
+                              </button>
+                            )}
 
-                              {file.dispute_status === 'reported' && (
-                                <span className="dispute-waiting">
-                                  Awaiting correction…
-                                </span>
-                              )}
-                            </>
+                            {file.dispute_status === 'reported' && (
+                              <span className="action-dispute-waiting">
+                                Awaiting correction
+                              </span>
+                            )}
                           </div>
                         </td>
                       </tr>

@@ -19,12 +19,17 @@ use Firebase\JWT\SignatureInvalidException;
 function authenticate(): array {
     $headers = getallheaders();
     $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    $token = '';
 
-    if (empty($authHeader) || !str_starts_with($authHeader, 'Bearer ')) {
-        Response::unauthorized('No token provided');
+    if (!empty($authHeader) && str_starts_with($authHeader, 'Bearer ')) {
+        $token = trim(substr($authHeader, 7));
+    } elseif (!empty($_GET['token'])) {
+        $token = trim($_GET['token']);
     }
 
-    $token = trim(substr($authHeader, 7));
+    if (empty($token)) {
+        Response::unauthorized('No token provided');
+    }
 
     try {
         $secret = $_ENV['JWT_SECRET'] ?? 'secret';

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../../styles/list.css';
+import '../../styles/dashboard.css';
 
 const CustomerFiles = () => {
   const [files, setFiles]           = useState([]);
@@ -120,7 +121,7 @@ const CustomerFiles = () => {
                 <th>Service Type</th>
                 <th>Status</th>
                 <th>Upload Date</th>
-                <th>Actions</th>
+                <th style={{ minWidth: '450px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -151,14 +152,12 @@ const CustomerFiles = () => {
                   {/* ── Actions ── */}
                   <td>
                     <div className="file-action-buttons">
-
-                      {/* Download report buttons for completed files */}
                       {file.status === 'completed' && (
                         <>
                           {(file.service_type === 'ai_detection' || file.service_type === 'both') && (
                             <button
                               onClick={() => handleDownloadReport(file.id, 'ai')}
-                              className="btn btn-sm btn-primary"
+                              className="ai-report-btn"
                               title="Download AI Detection Report"
                             >
                               🤖 AI Report
@@ -167,29 +166,32 @@ const CustomerFiles = () => {
                           {(file.service_type === 'plagiarism_check' || file.service_type === 'both') && (
                             <button
                               onClick={() => handleDownloadReport(file.id, 'plagiarism')}
-                              className="btn btn-sm btn-success"
+                              className="plag-report-btn"
                               title="Download Plagiarism Report"
                             >
                               📋 Plagiarism Report
                             </button>
                           )}
 
-                          {/* Wrong file alert — only if not already reported */}
                           {file.dispute_status !== 'reported' && (
                             <button
                               onClick={() => handleDispute(file.id)}
-                              className="btn btn-sm btn-dispute"
+                              className="action-btn-secondary"
                               disabled={disputingId === file.id}
-                              title="Report that you received wrong or incorrect report files"
+                              title={disputingId === file.id ? 'Sending...' : 'Report a problem with files'}
                             >
-                              {disputingId === file.id ? 'Sending...' : '⚠️ Wrong File?'}
+                              <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                              </svg>
+                              {disputingId === file.id ? 'Sending...' : 'Report a Problem'}
                             </button>
                           )}
 
-                          {/* Already reported — show waiting state */}
                           {file.dispute_status === 'reported' && (
-                            <span className="dispute-waiting">
-                              🕐 Awaiting correction…
+                            <span className="action-dispute-waiting">
+                              Awaiting correction
                             </span>
                           )}
                         </>

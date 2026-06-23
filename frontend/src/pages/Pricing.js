@@ -4,48 +4,37 @@ import '../styles/pages.css';
 const Pricing = () => {
   const plans = [
     {
-      name: 'Basic',
-      price: '$9.99',
-      period: '/month',
+      name: 'Single Credit',
+      price: '450 LKR',
+      period: '/check',
       features: [
-        'Up to 10 documents/month',
-        'AI Detection',
-        'Plagiarism Check',
-        'Basic Reports'
+        '1 check credit',
+        'Similarity + AI detection',
+        'Two PDF reports per scan',
+        '7-day pack validity'
       ]
     },
     {
-      name: 'Professional',
-      price: '$29.99',
-      period: '/month',
+      name: 'Starter Pack',
+      price: '4,000 LKR',
+      period: '/10 checks',
       features: [
-        'Unlimited documents',
-        'AI Detection',
-        'Plagiarism Check',
-        'Detailed Reports',
-        'Priority Support',
-        'Priority Processing'
+        '10 check credits (400 LKR/check)',
+        'Similarity + AI detection',
+        'Two PDF reports per scan',
+        '7-day pack validity'
       ],
       featured: true
-    },
-    {
-      name: 'Enterprise',
-      price: 'Custom',
-      period: '',
-      features: [
-        'Unlimited everything',
-        'API Access',
-        'Custom Integrations',
-        'Dedicated Support',
-        'Team Management'
-      ]
     }
   ];
 
   return (
     <div className="pricing-page">
-      <h1>Simple, Transparent Pricing</h1>
-      <p>Choose the plan that fits your needs</p>
+      <div className="section-header">
+        <span className="section-tag">Pricing Plans</span>
+        <h2>Flexible Checking Credits</h2>
+        <p>Purchase credits in LKR. No monthly subscriptions, no automated deductions. Billed once, valid for 7 days.</p>
+      </div>
 
       <div className="pricing-grid">
         {plans.map((plan, index) => (

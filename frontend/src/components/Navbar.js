@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiMenu, FiX, FiBell } from 'react-icons/fi';
+import { FiMenu, FiX, FiBell, FiShield } from 'react-icons/fi';
 import '../styles/Navbar.css';
 
 const Navbar = ({ user, onLogout }) => {
@@ -31,7 +31,8 @@ const Navbar = ({ user, onLogout }) => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-brand">
-          🔍 Plagiarism Checker
+          <FiShield className="brand-icon" />
+          <span>Turnscan</span>
         </Link>
 
         <button

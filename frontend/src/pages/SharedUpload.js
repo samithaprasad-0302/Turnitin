@@ -1,8 +1,88 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/auth.css';
 import '../styles/dashboard.css';
+
+// Web Audio API Synthesizers for Notifications
+const playProcessSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    
+    // Rising chime note sequence (A4 then C#5)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(440, now);
+    gain1.gain.setValueAtTime(0.12, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.35);
+    
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(554.37, now + 0.12);
+    gain2.gain.setValueAtTime(0.12, now + 0.12);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.47);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.12);
+    osc2.stop(now + 0.47);
+  } catch (err) {
+    console.error('Audio synthesizer error:', err);
+  }
+};
+
+const playCompleteSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const now = ctx.currentTime;
+    
+    // Rising success chime (C5 -> E5 -> G5)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(523.25, now);
+    gain1.gain.setValueAtTime(0.10, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.25);
+    
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(659.25, now + 0.08);
+    gain2.gain.setValueAtTime(0.10, now + 0.08);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.33);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.08);
+    osc2.stop(now + 0.33);
+
+    const osc3 = ctx.createOscillator();
+    const gain3 = ctx.createGain();
+    osc3.type = 'sine';
+    osc3.frequency.setValueAtTime(783.99, now + 0.16);
+    gain3.gain.setValueAtTime(0.12, now + 0.16);
+    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    osc3.connect(gain3);
+    gain3.connect(ctx.destination);
+    osc3.start(now + 0.16);
+    osc3.stop(now + 0.55);
+  } catch (err) {
+    console.error('Audio synthesizer error:', err);
+  }
+};
 
 const SharedUpload = () => {
   const { token } = useParams();
@@ -17,15 +97,35 @@ const SharedUpload = () => {
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState('');
 
+  const prevFilesRef = useRef([]);
+
   useEffect(() => {
-    fetchDetails();
+    fetchDetails(false);
+    const interval = setInterval(() => fetchDetails(true), 10000);
+    return () => clearInterval(interval);
   }, [token]);
 
-  const fetchDetails = async () => {
+  const fetchDetails = async (isPoll = false) => {
     try {
       const response = await axios.get(`/api/system/temporary-links/${token}`);
       setLinkInfo(response.data.link);
-      setFiles(response.data.files || []);
+      const newFiles = response.data.files || [];
+      
+      if (isPoll && prevFilesRef.current && prevFilesRef.current.length > 0) {
+        newFiles.forEach(newFile => {
+          const prevFile = prevFilesRef.current.find(f => f.id === newFile.id);
+          if (prevFile) {
+            if (prevFile.status === 'pending' && (newFile.status === 'accepted' || newFile.status === 'in_progress')) {
+              playProcessSound();
+            } else if ((prevFile.status === 'accepted' || prevFile.status === 'in_progress') && newFile.status === 'completed') {
+              playCompleteSound();
+            }
+          }
+        });
+      }
+      
+      setFiles(newFiles);
+      prevFilesRef.current = newFiles;
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load upload portal. Link may have been revoked.');
     } finally {
@@ -166,12 +266,25 @@ const SharedUpload = () => {
                   disabled={uploading}
                   style={{ width: '100%', padding: '10px', fontSize: '14px', border: '1px solid #cbd5e1', borderRadius: '8px' }}
                 />
+
+                {uploadFile && uploadFile.size < 7 * 1024 * 1024 && (
+                  <div className="file-size-warning-box" style={{ marginTop: '14px' }}>
+                    <span>⚠️</span>
+                    <div>
+                      <strong>Below 7 MB Recommendation</strong>
+                      <p style={{ margin: '2px 0 0', fontSize: '11.5px' }}>
+                        Your selected file size is only <strong>{(uploadFile.size / (1024 * 1024)).toFixed(2)} MB</strong>. 
+                        Please ensure this is the intended document before uploading.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button 
                 type="submit" 
                 className="btn btn-primary" 
-                disabled={uploading}
+                disabled={uploading || !uploadFile}
                 style={{ width: '100%', padding: '12px', borderRadius: '8px', fontWeight: 'bold', fontSize: '15px' }}
               >
                 {uploading ? '⏳ Uploading...' : '🚀 Submit Document'}
@@ -180,14 +293,40 @@ const SharedUpload = () => {
           )}
         </div>
 
-        {/* Info Card */}
-        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '30px', textAlign: 'left' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 12px', color: '#1e293b' }}>ℹ️ How it works</h3>
-          <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#475569', lineHeight: '1.7' }}>
-            <li style={{ marginBottom: '8px' }}>Select the service type and upload your PDF or Word document.</li>
-            <li style={{ marginBottom: '8px' }}>Once uploaded, the checker team is instantly notified to begin evaluation.</li>
-            <li style={{ marginBottom: '8px' }}>Keep this page open or save the URL. You will see progress updates in real time.</li>
-            <li>When checking completes, download links for your reports will appear in the files table on the right.</li>
+        {/* Guidelines Block */}
+        <div className="upload-guidelines-card" style={{ padding: '30px' }}>
+          <h3>📋 Document Requirements</h3>
+          <p className="guidelines-subtitle" style={{ margin: '0 0 20px' }}>Please ensure your document meets these conditions before uploading to avoid checking errors:</p>
+          
+          <ul className="guidelines-list">
+            <li>
+              <span className="guideline-icon">❌</span>
+              <div className="guideline-text">
+                <strong>No Cover Sheets or Logos</strong>
+                <span>Do not upload files containing cover pages, headers with symbols, or university/institution logos.</span>
+              </div>
+            </li>
+            <li>
+              <span className="guideline-icon">🔢</span>
+              <div className="guideline-text">
+                <strong>Word Count Range</strong>
+                <span>The document word count must be between 400 and 29,000 words.</span>
+              </div>
+            </li>
+            <li>
+              <span className="guideline-icon">💾</span>
+              <div className="guideline-text">
+                <strong>Minimum File Size</strong>
+                <span>Your file size must be at least 7 MB.</span>
+              </div>
+            </li>
+            <li>
+              <span className="guideline-icon">🖼️</span>
+              <div className="guideline-text">
+                <strong>Remove Images</strong>
+                <span>You can strip images from the file to save upload time, as Turnitin does not scan/detect them.</span>
+              </div>
+            </li>
           </ul>
         </div>
       </div>
@@ -224,7 +363,7 @@ const SharedUpload = () => {
                   <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Service Type</th>
                   <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Status</th>
                   <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Upload Date</th>
-                  <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Reports</th>
+                  <th style={{ padding: '12px 16px', color: '#64748b', fontSize: '13px', fontWeight: 600, minWidth: '320px' }}>Reports</th>
                 </tr>
               </thead>
               <tbody>
@@ -233,32 +372,30 @@ const SharedUpload = () => {
                     <td style={{ padding: '16px', fontSize: '14.5px', fontWeight: 600, color: '#0f172a' }}>{file.title || file.original_filename}</td>
                     <td style={{ padding: '16px', fontSize: '14px', color: '#475569' }}>{file.service_type.replace(/_/g, ' ')}</td>
                     <td style={{ padding: '16px' }}>
-                      <span className={`badge badge-status-${file.status}`} style={{ textTransform: 'capitalize' }}>
-                        {file.status}
+                      <span className={`badge badge-status-${file.status === 'accepted' || file.status === 'in_progress' ? 'processing' : file.status}`} style={{ textTransform: 'capitalize' }}>
+                        {file.status === 'accepted' || file.status === 'in_progress' ? 'processing' : file.status}
                       </span>
                     </td>
                     <td style={{ padding: '16px', fontSize: '13.5px', color: '#64748b' }}>{new Date(file.upload_date).toLocaleString()}</td>
                     <td style={{ padding: '16px' }}>
                       {file.status === 'completed' ? (
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="file-action-buttons">
                           {(file.service_type === 'ai_detection' || file.service_type === 'both') && file.ai_report_file && (
                             <button
                               onClick={() => handleDownload(file.id, 'ai', file.ai_report_original_name)}
-                              className="btn btn-sm btn-primary"
-                              title={`AI Report (${file.ai_percentage}%)`}
-                              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', fontSize: '12.5px' }}
+                              className="ai-report-btn"
+                              title="Download AI Detection Report"
                             >
-                              🤖 AI ({file.ai_percentage}%)
+                              🤖 AI Report
                             </button>
                           )}
                           {(file.service_type === 'plagiarism_check' || file.service_type === 'both') && file.plagiarism_report_file && (
                             <button
                               onClick={() => handleDownload(file.id, 'plagiarism', file.plagiarism_report_original_name)}
-                              className="btn btn-sm btn-success"
-                              title={`Plagiarism Report (${file.plagiarism_percentage}%)`}
-                              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', fontSize: '12.5px' }}
+                              className="plag-report-btn"
+                              title="Download Plagiarism Report"
                             >
-                              📋 Plag ({file.plagiarism_percentage}%)
+                              📋 Plagiarism Report
                             </button>
                           )}
                         </div>

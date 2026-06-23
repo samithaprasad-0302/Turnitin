@@ -155,3 +155,17 @@
 .comment-item small {
   color: #999;
 }
+
+@media (max-width: 768px) {
+  .notification-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+
+  .notification-item button {
+    width: 100% !important;
+    text-align: center !important;
+  }
+}
